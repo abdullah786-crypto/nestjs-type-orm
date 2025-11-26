@@ -52,6 +52,8 @@ const user_entity_1 = require("../entities/user.entity");
 const user_repository_1 = require("../repositories/user.repository");
 const bcrypt = __importStar(require("bcrypt"));
 const auth_user_decorator_1 = require("../common/auth-user.decorator");
+const pagination_1 = require("../paginate/pagination");
+const user_list_query_dto_1 = require("./dt/user-list-query.dto");
 let UserService = class UserService {
     userRepository;
     constructor(userRepository) {
@@ -71,14 +73,17 @@ let UserService = class UserService {
     }
     async findByEmail(dto) {
         const { email } = dto;
-        const userEmail = await this.userRepository.findOne({ where: { email: email }, select: ["password", "email", "uid"] });
+        const userEmail = await this.userRepository.findOne({
+            where: { email: email },
+            select: ['password', 'email', 'uid'],
+        });
         return userEmail;
     }
     async validateUser(dto) {
         const { password } = dto;
         const existingUser = await this.findByEmail(dto);
         if (!existingUser) {
-            throw new common_1.UnauthorizedException("Invalid email or password");
+            throw new common_1.UnauthorizedException('Invalid email or password');
         }
         const isMatch = await bcrypt.compare(password, existingUser.password);
         if (!isMatch) {
@@ -86,16 +91,49 @@ let UserService = class UserService {
         }
         return existingUser;
     }
-    async getAllUsers(user) {
-        console.log('value of user is', user);
-        return await this.userRepository.find();
+    async getAllUsers(user, listQueryDto) {
+        const page = listQueryDto.page || 1;
+        const limit = listQueryDto.pagesize || 25;
+        const baseQuery = this.userRepository
+            .createQueryBuilder('users')
+            .where({
+            'user.sub_id': 9025,
+            'user.created_by': 0,
+            'user.is_delete': 0,
+        })
+            .leftJoin('app_stores', 'user.store_id', 'app_stores.id')
+            .leftJoin('app_user_roles', 'user.role_id', 'app_user_roles.id')
+            .select([
+            'users.name as name',
+            'users.uid as id',
+            'users.email',
+            'users.phone',
+            'users.status',
+            'users.role_id',
+            'users.store_id',
+            'users.two_factor',
+            'users.sub_id',
+            'users.commission_setting',
+            'app_user_stores.name as store_name',
+            'app_user_roles.name as role_name',
+            'app_user_store.alt_name as alt_name',
+        ]);
+        const countPromise = baseQuery.clone().select('COUNT(DISTINCT users.id');
+        return new pagination_1.Pagination({
+            total: 50,
+            limit: 10,
+            page: 1,
+            next: 2,
+            records: [],
+            previous: 0,
+        });
     }
 };
 exports.UserService = UserService;
 __decorate([
     __param(0, (0, auth_user_decorator_1.AuthUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_entity_1.User]),
+    __metadata("design:paramtypes", [user_entity_1.User, user_list_query_dto_1.UserListQueryDto]),
     __metadata("design:returntype", Promise)
 ], UserService.prototype, "getAllUsers", null);
 exports.UserService = UserService = __decorate([

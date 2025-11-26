@@ -17,21 +17,23 @@ const common_1 = require("@nestjs/common");
 const user_entity_1 = require("../entities/user.entity");
 const user_service_1 = require("./user.service");
 const auth_user_decorator_1 = require("../common/auth-user.decorator");
+const user_list_query_dto_1 = require("./dt/user-list-query.dto");
 let UserController = class UserController {
     userService;
     constructor(userService) {
         this.userService = userService;
     }
-    async getAllUsersList(user) {
-        return this.userService.getAllUsers(user);
+    async getAllUsersList(user, listQueryDto) {
+        return this.userService.getAllUsers(user, listQueryDto);
     }
 };
 exports.UserController = UserController;
 __decorate([
     (0, common_1.Get)('listing'),
     __param(0, (0, auth_user_decorator_1.AuthUser)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_entity_1.User]),
+    __metadata("design:paramtypes", [user_entity_1.User, user_list_query_dto_1.UserListQueryDto]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getAllUsersList", null);
 exports.UserController = UserController = __decorate([
